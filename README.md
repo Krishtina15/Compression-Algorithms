@@ -28,8 +28,8 @@ It works best on data with long runs of repeated characters, such as simple imag
 ```
 project-algo/
 ├── rle_app/
-│   └── app.py            # Flask app — RLE logic + HTML template + API routes
-└── rle-compressor.html   # Standalone HTML version (no server needed)
+│   └── app.py            
+└── rle-compressor.html   
 ```
 
 ## Requirements

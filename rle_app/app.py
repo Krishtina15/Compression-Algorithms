@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify, render_template_string, send_file
 import io
+import pdfplumber
+import docx
+import pptx
 
 app = Flask(__name__)
 
@@ -85,34 +88,6 @@ HTML = r"""
 
     .section-head h2 { font-size: 1rem; font-weight: 700; color: #1a1f36; }
     .section-head p  { font-size: 0.78rem; color: #8a94b0; margin-top: 2px; }
-
-    /* ── Toggle pill ── */
-    .toggle-pill {
-      display: flex;
-      background: #eef0fb;
-      border-radius: 20px;
-      padding: 3px;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-
-    .toggle-pill button {
-      padding: 5px 14px;
-      border: none;
-      border-radius: 16px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      cursor: pointer;
-      background: transparent;
-      color: #8a94b0;
-      transition: all 0.18s;
-    }
-
-    .toggle-pill button.active {
-      background: #5c6bc0;
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(92, 107, 192, 0.35);
-    }
 
     /* ── Drop zone ── */
     .drop-zone {
@@ -382,10 +357,6 @@ HTML = r"""
           <h2>Compress Text</h2>
           <p>Upload a file or paste content below</p>
         </div>
-        <div class="toggle-pill">
-          <button class="active" id="mode-compress" onclick="setMode('compress')">Compress</button>
-          <button id="mode-decompress" onclick="setMode('decompress')">Decompress</button>
-        </div>
       </div>
 
       <div class="drop-zone" id="drop-zone">
@@ -394,9 +365,9 @@ HTML = r"""
             d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
         </svg>
         <p>Drag &amp; drop a file, or <span id="browse-link">browse</span></p>
-        <p style="font-size:0.72rem;color:#c5cbee;margin-top:3px;">.txt .csv .log .md and other plain-text files</p>
+        <p style="font-size:0.72rem;color:#c5cbee;margin-top:3px;">.txt .pdf .docx .pptx .csv .log .md</p>
       </div>
-      <input type="file" id="file-input" />
+      <input type="file" id="file-input" accept=".txt,.pdf,.docx,.pptx,.csv,.log,.md,.json,.xml" />
 
       <div class="divider">or paste text</div>
 
@@ -541,12 +512,6 @@ HTML = r"""
 
   function resetStatCards() {}
 
-  // Mode toggle (visual only — compress/decompress handled by buttons)
-  function setMode(m) {
-    document.getElementById('mode-compress').classList.toggle('active',   m === 'compress');
-    document.getElementById('mode-decompress').classList.toggle('active', m === 'decompress');
-  }
-
   // File loading
   browseLink.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('click',   () => fileInput.click());
@@ -560,10 +525,22 @@ HTML = r"""
     if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
   });
 
-  function readFile(file) {
-    const reader = new FileReader();
-    reader.onload = e => { inputText.value = e.target.result; updateCount(); hideResults(); };
-    reader.readAsText(file);
+  async function readFile(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    dropZone.querySelector('p').textContent = 'Extracting text…';
+    try {
+      const res  = await fetch('/extract', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      inputText.value = data.text;
+      updateCount();
+      hideResults();
+    } catch (e) {
+      alert('Failed to read file: ' + e.message);
+    } finally {
+      dropZone.querySelector('p').textContent = 'Drag & drop a file, or browse';
+    }
   }
 
   inputText.addEventListener('input', () => { updateCount(); hideResults(); });
@@ -719,6 +696,52 @@ def rle_decode(encoded: str) -> str:
             i += 1
         result.append(ch * count)
     return "".join(result)
+
+
+def extract_text_from_file(file) -> str:
+    filename = file.filename.lower()
+    data = file.read()
+    buf = io.BytesIO(data)
+
+    if filename.endswith(".pdf"):
+        text_parts = []
+        with pdfplumber.open(buf) as pdf:
+            for page in pdf.pages:
+                t = page.extract_text()
+                if t:
+                    text_parts.append(t)
+        return "\n\n".join(text_parts)
+
+    elif filename.endswith(".docx"):
+        doc = docx.Document(buf)
+        return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+
+    elif filename.endswith(".pptx"):
+        prs = pptx.Presentation(buf)
+        lines = []
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text") and shape.text.strip():
+                    lines.append(shape.text)
+        return "\n".join(lines)
+
+    else:
+        # plain text fallback
+        return data.decode("utf-8", errors="replace")
+
+
+@app.route("/extract", methods=["POST"])
+def extract():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    f = request.files["file"]
+    try:
+        text = extract_text_from_file(f)
+        if not text.strip():
+            return jsonify({"error": "Could not extract any text from this file."}), 400
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({"error": f"Failed to read file: {e}"}), 500
 
 
 @app.route("/")
