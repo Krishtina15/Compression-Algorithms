@@ -3,7 +3,7 @@ import io
 
 app = Flask(__name__)
 
-HTML = """
+HTML = r"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,246 +14,494 @@ HTML = """
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f5f5f5;
-      color: #222;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #eef0fb;
+      color: #1a1f36;
       min-height: 100vh;
-      padding: 32px 16px;
+      padding: 28px 24px;
     }
 
-    .container { max-width: 720px; margin: 0 auto; }
+    /* ── Layout ── */
+    .dashboard {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 20px;
+    }
 
-    header { margin-bottom: 32px; }
-    header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
-    header p  { margin-top: 6px; color: #666; font-size: 0.9rem; }
+    .main  { display: flex; flex-direction: column; gap: 20px; }
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
 
+    /* ── Card ── */
     .card {
       background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
+      border-radius: 18px;
       padding: 24px;
+      box-shadow: 0 4px 24px rgba(90, 100, 200, 0.07);
+    }
+
+    /* ── Header card ── */
+    .header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #fff 60%, #eef0fb 100%);
+      padding: 28px 32px;
+    }
+
+    .header-card h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1a1f36;
+      letter-spacing: -0.5px;
+    }
+
+    .header-card p {
+      margin-top: 5px;
+      color: #8a94b0;
+      font-size: 0.88rem;
+    }
+
+    .header-illo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c7d0ff 0%, #a5b4fc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Section label ── */
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       margin-bottom: 16px;
     }
 
-    .card-title {
-      font-size: 0.78rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #888;
-      margin-bottom: 12px;
+    .section-head h2 { font-size: 1rem; font-weight: 700; color: #1a1f36; }
+    .section-head p  { font-size: 0.78rem; color: #8a94b0; margin-top: 2px; }
+
+    /* ── Toggle pill ── */
+    .toggle-pill {
+      display: flex;
+      background: #eef0fb;
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+      flex-shrink: 0;
     }
 
+    .toggle-pill button {
+      padding: 5px 14px;
+      border: none;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: #8a94b0;
+      transition: all 0.18s;
+    }
+
+    .toggle-pill button.active {
+      background: #5c6bc0;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(92, 107, 192, 0.35);
+    }
+
+    /* ── Drop zone ── */
     .drop-zone {
-      border: 2px dashed #d0d0d0;
-      border-radius: 8px;
-      padding: 28px;
+      border: 2px dashed #d5d9f0;
+      border-radius: 12px;
+      padding: 22px;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .drop-zone:hover, .drop-zone.dragover {
-      border-color: #4a90e2;
-      background: #f0f6ff;
+      border-color: #5c6bc0;
+      background: #f3f4fd;
     }
 
-    .drop-zone svg { display: block; margin: 0 auto 10px; color: #aaa; }
-    .drop-zone p   { color: #666; font-size: 0.9rem; }
-    .drop-zone span { color: #4a90e2; font-weight: 500; }
+    .drop-zone svg  { display: block; margin: 0 auto 8px; color: #b0b8d8; }
+    .drop-zone p    { color: #8a94b0; font-size: 0.85rem; }
+    .drop-zone span { color: #5c6bc0; font-weight: 600; }
 
     #file-input { display: none; }
 
+    /* ── Textarea ── */
     textarea {
       width: 100%;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 12px;
+      border: 1.5px solid #e5e8f5;
+      border-radius: 10px;
+      padding: 12px 14px;
       font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       resize: vertical;
       outline: none;
       transition: border-color 0.2s;
-      background: #fafafa;
-      color: #222;
-      line-height: 1.5;
+      background: #fafbff;
+      color: #1a1f36;
+      line-height: 1.6;
     }
 
-    textarea:focus  { border-color: #4a90e2; background: #fff; }
-    .input-area     { height: 140px; }
-    .output-area    { height: 140px; background: #f9f9f9; }
+    textarea:focus   { border-color: #5c6bc0; background: #fff; }
+    .input-area      { height: 130px; }
+    .output-area     { height: 120px; background: #f7f8fe; }
 
-    .row {
+    /* ── Buttons ── */
+    .btn-row {
       display: flex;
       gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
+      margin-top: 14px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     button {
-      padding: 9px 20px;
+      padding: 9px 22px;
       border: none;
-      border-radius: 6px;
-      font-size: 0.88rem;
-      font-weight: 500;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
+      transition: all 0.16s;
     }
 
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-primary   { background: #4a90e2; color: #fff; }
-    .btn-primary:hover   { background: #357abd; }
-    .btn-secondary { background: #f0f0f0; color: #333; }
-    .btn-secondary:hover { background: #e0e0e0; }
-    .btn-ghost     { background: transparent; color: #4a90e2; border: 1px solid #4a90e2; }
-    .btn-ghost:hover     { background: #f0f6ff; }
-
-    .stats {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
+    .btn-primary {
+      background: linear-gradient(135deg, #5c6bc0, #7986cb);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(92, 107, 192, 0.35);
     }
 
-    .stat {
-      background: #f5f5f5;
-      border-radius: 6px;
-      padding: 10px 16px;
-      flex: 1;
-      min-width: 110px;
-      text-align: center;
+    .btn-primary:hover   { box-shadow: 0 6px 18px rgba(92,107,192,0.45); transform: translateY(-1px); }
+    .btn-primary:active  { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      background: transparent;
+      color: #5c6bc0;
+      border: 1.5px solid #c5cbee;
     }
 
-    .stat-value       { font-size: 1.3rem; font-weight: 700; color: #222; }
-    .stat-value.good  { color: #2a9d5c; }
-    .stat-value.bad   { color: #e05; }
-    .stat-label       { font-size: 0.72rem; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-outline:hover { background: #f0f2fb; }
 
-    .msg {
-      font-size: 0.82rem;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-top: 12px;
-      display: none;
+    .btn-ghost {
+      background: #f0f2fb;
+      color: #5c6bc0;
     }
 
-    .msg.info  { background: #e8f4fd; color: #1a6bb0; display: block; }
-    .msg.warn  { background: #fff8e1; color: #a07000; display: block; }
-    .msg.error { background: #fdecea; color: #c0392b; display: block; }
+    .btn-ghost:hover { background: #e5e8f8; }
 
+    .char-count {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: #b0b8d8;
+      font-weight: 500;
+    }
+
+    /* ── Divider ── */
     .divider {
       display: flex;
       align-items: center;
       gap: 10px;
-      color: #bbb;
-      font-size: 0.8rem;
-      margin: 4px 0;
+      color: #c5cbee;
+      font-size: 0.75rem;
+      margin: 10px 0;
     }
 
     .divider::before, .divider::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: #e0e0e0;
+      background: #e8eaf6;
     }
 
-    footer {
-      text-align: center;
-      color: #bbb;
-      font-size: 0.78rem;
-      margin-top: 24px;
+    /* ── Message banner ── */
+    .msg {
+      font-size: 0.8rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-top: 12px;
+      display: none;
+      line-height: 1.5;
     }
 
-    #spinner { display: none; }
-    .loading #spinner { display: inline; }
+    .msg.info  { background: #eef2ff; color: #3d52a0; display: block; }
+    .msg.warn  { background: #fffbeb; color: #92620a; display: block; }
+    .msg.error { background: #fff0f0; color: #c0392b; display: block; }
+
+    /* ── Sidebar metric boxes ── */
+    .metric-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 4px 24px rgba(90, 100, 200, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: default;
+    }
+
+    .metric-box:hover { background: #f7f8fe; }
+
+    .mb-left .mb-label {
+      font-size: 0.72rem;
+      color: #8a94b0;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .mb-left .mb-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1a1f36;
+    }
+
+    .mb-arrow {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #eef0ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5c6bc0;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Donut chart ── */
+    .donut-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 18px 18px;
+    }
+
+    .donut-card .dc-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #8a94b0;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      align-self: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .donut-wrap {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 8px;
+    }
+
+    .donut-wrap svg { transform: rotate(-90deg); }
+
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-center .pct {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1a1f36;
+    }
+
+    .donut-center .pct-label {
+      font-size: 0.65rem;
+      color: #8a94b0;
+      margin-top: 1px;
+    }
+
+    /* ── Progress bar ── */
+    .progress-block { margin-top: 6px; width: 100%; }
+
+    .pb-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .pb-header span:first-child { font-size: 0.82rem; font-weight: 600; color: #1a1f36; }
+    .pb-header span:last-child  { font-size: 0.82rem; color: #8a94b0; }
+
+    .pb-track {
+      height: 7px;
+      background: #e8eaf6;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .pb-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #5c6bc0, #9575cd);
+      transition: width 0.6s ease;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .sidebar   { flex-direction: row; flex-wrap: wrap; }
+      .metric-box, .donut-card, .card.donut-card { flex: 1 1 140px; }
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>RLE Compressor</h1>
-    <p>Compress text using Run-Length Encoding — server-side Python processes your file.</p>
-  </header>
+<div class="dashboard">
 
-  <!-- Input -->
-  <div class="card">
-    <div class="card-title">Input</div>
+  <!-- ═══════════════ MAIN COLUMN ═══════════════ -->
+  <div class="main">
 
-    <div class="drop-zone" id="drop-zone">
-      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-      </svg>
-      <p>Drag &amp; drop a file here, or <span id="browse-link">browse</span></p>
-      <p style="font-size:0.75rem;color:#bbb;margin-top:4px;">Plain-text files (.txt, .csv, .log, .md, etc.)</p>
+    <!-- Header -->
+    <div class="card header-card">
+      <div>
+        <h1>RLE Compressor</h1>
+        <p>Compress your text files using Run-Length Encoding</p>
+      </div>
+      <div class="header-illo">🗜️</div>
     </div>
-    <input type="file" id="file-input" />
 
-    <div class="divider">or paste text</div>
-
-    <textarea id="input-text" class="input-area" placeholder="Paste or type text here…"></textarea>
-
-    <div class="row">
-      <button class="btn-primary" id="compress-btn">
-        <span id="spinner">⏳ </span>Compress
-      </button>
-      <button class="btn-secondary" id="clear-btn">Clear</button>
-      <span id="char-count" style="margin-left:auto;color:#aaa;font-size:0.8rem;">0 chars</span>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="card" id="stats-card" style="display:none;">
-    <div class="card-title">Result</div>
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-value" id="stat-original">—</div>
-        <div class="stat-label">Original</div>
+    <!-- Input card -->
+    <div class="card">
+      <div class="section-head">
+        <div>
+          <h2>Compress Text</h2>
+          <p>Upload a file or paste content below</p>
+        </div>
+        <div class="toggle-pill">
+          <button class="active" id="mode-compress" onclick="setMode('compress')">Compress</button>
+          <button id="mode-decompress" onclick="setMode('decompress')">Decompress</button>
+        </div>
       </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-compressed">—</div>
-        <div class="stat-label">Compressed</div>
+
+      <div class="drop-zone" id="drop-zone">
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        <p>Drag &amp; drop a file, or <span id="browse-link">browse</span></p>
+        <p style="font-size:0.72rem;color:#c5cbee;margin-top:3px;">.txt .csv .log .md and other plain-text files</p>
       </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-ratio">—</div>
-        <div class="stat-label">Ratio</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-saving">—</div>
-        <div class="stat-label">Saving</div>
+      <input type="file" id="file-input" />
+
+      <div class="divider">or paste text</div>
+
+      <textarea id="input-text" class="input-area" placeholder="Paste or type text here…"></textarea>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="compress-btn">Compress</button>
+        <button class="btn-outline" id="clear-btn">Clear</button>
+        <span class="char-count" id="char-count">0 chars</span>
       </div>
     </div>
-    <div class="msg" id="rle-msg"></div>
-  </div>
 
-  <!-- Output -->
-  <div class="card" id="output-card" style="display:none;">
-    <div class="card-title">Compressed Output</div>
-    <textarea id="output-text" class="output-area" readonly></textarea>
-    <div class="row">
-      <button class="btn-primary"   id="download-btn">Download .rle</button>
-      <button class="btn-ghost"     id="copy-btn">Copy</button>
-      <button class="btn-ghost"     id="decompress-btn">Decompress &amp; Verify</button>
+    <!-- Output card (hidden until result) -->
+    <div class="card" id="output-card" style="display:none;">
+      <div class="section-head">
+        <div>
+          <h2>Compressed Output</h2>
+          <p>RLE-encoded result</p>
+        </div>
+      </div>
+      <textarea id="output-text" class="output-area" readonly></textarea>
+      <div class="btn-row">
+        <button class="btn-primary"  id="download-btn">Download .rle</button>
+        <button class="btn-ghost"    id="copy-btn">Copy</button>
+        <button class="btn-outline"  id="decompress-btn">Verify Round-Trip</button>
+      </div>
+      <div class="msg" id="rle-msg"></div>
     </div>
-  </div>
 
-  <!-- Verify -->
-  <div class="card" id="verify-card" style="display:none;">
-    <div class="card-title">Decompressed (Verification)</div>
-    <textarea id="verify-text" class="output-area" readonly></textarea>
-    <div class="msg" id="verify-msg"></div>
-  </div>
+    <!-- Verify card -->
+    <div class="card" id="verify-card" style="display:none;">
+      <div class="section-head">
+        <div><h2>Decompressed</h2><p>Verification against original</p></div>
+      </div>
+      <textarea id="verify-text" class="output-area" readonly></textarea>
+      <div class="msg" id="verify-msg"></div>
+    </div>
 
-  <footer>RLE: consecutive identical characters encoded as count + character &nbsp;|&nbsp; Powered by Python + Flask</footer>
-</div>
+  </div><!-- /main -->
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <div class="sidebar">
+
+    <div class="metric-box" id="mb-original">
+      <div class="mb-left">
+        <div class="mb-label">Original Size</div>
+        <div class="mb-value" id="mb-orig-val">—</div>
+      </div>
+      <div class="mb-arrow">›</div>
+    </div>
+
+    <div class="metric-box" id="mb-compressed">
+      <div class="mb-left">
+        <div class="mb-label">Compressed Size</div>
+        <div class="mb-value" id="mb-comp-val">—</div>
+      </div>
+      <div class="mb-arrow">›</div>
+    </div>
+
+    <div class="metric-box" id="mb-ratio">
+      <div class="mb-left">
+        <div class="mb-label">Ratio</div>
+        <div class="mb-value" id="mb-ratio-val">—</div>
+      </div>
+      <div class="mb-arrow">›</div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card donut-card">
+      <div class="dc-title">Compression</div>
+      <div class="donut-wrap">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle cx="55" cy="55" r="44" fill="none" stroke="#e8eaf6" stroke-width="12"/>
+          <circle id="donut-arc" cx="55" cy="55" r="44" fill="none"
+            stroke="#5c6bc0" stroke-width="12"
+            stroke-dasharray="0 276.46"
+            stroke-linecap="round"
+            style="transition: stroke-dasharray 0.7s ease;"/>
+        </svg>
+        <div class="donut-center">
+          <span class="pct" id="donut-pct">0%</span>
+          <span class="pct-label">Ratio</span>
+        </div>
+      </div>
+
+      <div class="progress-block">
+        <div class="pb-header">
+          <span>Space Saved</span>
+          <span id="pb-pct-label">0%</span>
+        </div>
+        <div class="pb-track">
+          <div class="pb-fill" id="pb-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+</div><!-- /dashboard -->
 
 <script>
   const inputText     = document.getElementById('input-text');
   const outputText    = document.getElementById('output-text');
   const verifyText    = document.getElementById('verify-text');
-  const charCount     = document.getElementById('char-count');
+  const charCountEl   = document.getElementById('char-count');
   const dropZone      = document.getElementById('drop-zone');
   const fileInput     = document.getElementById('file-input');
   const browseLink    = document.getElementById('browse-link');
@@ -262,7 +510,6 @@ HTML = """
   const downloadBtn   = document.getElementById('download-btn');
   const copyBtn       = document.getElementById('copy-btn');
   const decompressBtn = document.getElementById('decompress-btn');
-  const statsCard     = document.getElementById('stats-card');
   const outputCard    = document.getElementById('output-card');
   const verifyCard    = document.getElementById('verify-card');
   const rleMsg        = document.getElementById('rle-msg');
@@ -272,24 +519,38 @@ HTML = """
     return n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB';
   }
 
-  function showMsg(el, type, text) {
-    el.className = 'msg ' + type;
-    el.textContent = text;
-  }
+  function showMsg(el, type, text) { el.className = 'msg ' + type; el.textContent = text; }
+  function hideMsg(el)             { el.className = 'msg'; }
 
   function hideResults() {
-    statsCard.style.display = 'none';
     outputCard.style.display = 'none';
     verifyCard.style.display = 'none';
+    resetSidebar();
+    resetStatCards();
+  }
+
+  function resetSidebar() {
+    document.getElementById('mb-orig-val').textContent  = '—';
+    document.getElementById('mb-comp-val').textContent  = '—';
+    document.getElementById('mb-ratio-val').textContent = '—';
+    document.getElementById('donut-pct').textContent    = '0%';
+    document.getElementById('pb-pct-label').textContent = '0%';
+    document.getElementById('pb-fill').style.width      = '0%';
+    document.getElementById('donut-arc').setAttribute('stroke-dasharray', '0 276.46');
+  }
+
+  function resetStatCards() {}
+
+  // Mode toggle (visual only — compress/decompress handled by buttons)
+  function setMode(m) {
+    document.getElementById('mode-compress').classList.toggle('active',   m === 'compress');
+    document.getElementById('mode-decompress').classList.toggle('active', m === 'decompress');
   }
 
   // File loading
   browseLink.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('click',   () => fileInput.click());
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) readFile(fileInput.files[0]);
-  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) readFile(fileInput.files[0]); });
 
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -301,29 +562,24 @@ HTML = """
 
   function readFile(file) {
     const reader = new FileReader();
-    reader.onload = e => {
-      inputText.value = e.target.result;
-      updateCount();
-      hideResults();
-    };
+    reader.onload = e => { inputText.value = e.target.result; updateCount(); hideResults(); };
     reader.readAsText(file);
   }
 
   inputText.addEventListener('input', () => { updateCount(); hideResults(); });
 
   function updateCount() {
-    const n = inputText.value.length;
-    charCount.textContent = n.toLocaleString() + ' char' + (n !== 1 ? 's' : '');
+    const v = inputText.value;
+    const n = v.length;
+    charCountEl.textContent = n.toLocaleString() + ' char' + (n !== 1 ? 's' : '');
   }
 
-  // Compress (call Python backend)
+  // Compress
   compressBtn.addEventListener('click', async () => {
     const text = inputText.value;
     if (!text) return;
-
     compressBtn.disabled = true;
-    document.querySelector('.loading') || compressBtn.classList.add('loading');
-
+    compressBtn.textContent = 'Compressing…';
     try {
       const res  = await fetch('/compress', {
         method: 'POST',
@@ -331,37 +587,37 @@ HTML = """
         body: JSON.stringify({ text })
       });
       const data = await res.json();
-
-      if (data.error) {
-        showMsg(rleMsg, 'error', data.error);
-        statsCard.style.display = 'block';
-        outputCard.style.display = 'none';
-        return;
-      }
+      if (data.error) { alert(data.error); return; }
 
       outputText.value = data.compressed;
-
-      document.getElementById('stat-original').textContent   = fmtBytes(data.original_bytes);
-      document.getElementById('stat-compressed').textContent = fmtBytes(data.compressed_bytes);
-
-      const ratioEl  = document.getElementById('stat-ratio');
-      const savingEl = document.getElementById('stat-saving');
-      ratioEl.textContent  = data.ratio + 'x';
-      savingEl.textContent = data.saving_pct;
-
-      const good = data.compressed_bytes < data.original_bytes;
-      ratioEl.className  = 'stat-value ' + (good ? 'good' : 'bad');
-      savingEl.className = 'stat-value ' + (good ? 'good' : 'bad');
-
-      showMsg(rleMsg, good ? 'info' : 'warn', data.message);
-
-      statsCard.style.display = 'block';
       outputCard.style.display = 'block';
       verifyCard.style.display = 'none';
-    } catch (err) {
-      alert('Request failed: ' + err.message);
+
+      // Sidebar
+      document.getElementById('mb-orig-val').textContent  = fmtBytes(data.original_bytes);
+      document.getElementById('mb-comp-val').textContent  = fmtBytes(data.compressed_bytes);
+      document.getElementById('mb-ratio-val').textContent = data.ratio + 'x';
+
+      // Donut — show compression ratio capped at 100%
+      const ratio   = Math.min(data.ratio, 2);         // visual cap
+      const arcPct  = Math.max(0, Math.min(1, 1 - (data.ratio - 1)));  // 0→1 scale, 1 = perfect
+      const circ    = 2 * Math.PI * 44;
+      const dash    = (arcPct * circ).toFixed(2);
+      document.getElementById('donut-arc').setAttribute('stroke-dasharray', `${dash} ${circ}`);
+      document.getElementById('donut-pct').textContent = data.ratio + 'x';
+
+      const saving = parseFloat(data.saving_pct);
+      const savingAbs = Math.abs(saving);
+      const pbPct  = saving > 0 ? Math.min(saving, 100) : 0;
+      document.getElementById('pb-fill').style.width      = pbPct + '%';
+      document.getElementById('pb-pct-label').textContent = data.saving_pct;
+
+      const isSmaller = data.compressed_bytes < data.original_bytes;
+      showMsg(rleMsg, isSmaller ? 'info' : 'warn', data.message);
+
     } finally {
-      compressBtn.disabled = false;
+      compressBtn.disabled  = false;
+      compressBtn.textContent = 'Compress';
     }
   });
 
@@ -395,7 +651,7 @@ HTML = """
     URL.revokeObjectURL(url);
   });
 
-  // Decompress & verify
+  // Verify round-trip
   decompressBtn.addEventListener('click', async () => {
     const res  = await fetch('/decompress', {
       method: 'POST',
@@ -403,14 +659,12 @@ HTML = """
       body: JSON.stringify({ compressed: outputText.value })
     });
     const data = await res.json();
-
     verifyText.value = data.decompressed || '';
     verifyCard.style.display = 'block';
-
     if (data.error) {
       showMsg(verifyMsg, 'error', data.error);
     } else if (data.decompressed === inputText.value) {
-      showMsg(verifyMsg, 'info', 'Verification passed — decompressed output matches the original input exactly.');
+      showMsg(verifyMsg, 'info', '✓ Verification passed — decompressed output matches the original exactly.');
     } else {
       showMsg(verifyMsg, 'warn', 'Decompressed output differs from the original input.');
     }
@@ -433,7 +687,6 @@ def rle_encode(text: str) -> str:
         count = 1
         while i + count < len(text) and text[i + count] == ch:
             count += 1
-        # Escape backslashes and digits so the decoder is unambiguous
         if ch == "\\":
             escaped = "\\\\"
         elif ch.isdigit():
@@ -449,7 +702,6 @@ def rle_decode(encoded: str) -> str:
     result = []
     i = 0
     while i < len(encoded):
-        # read count digits
         num_str = ""
         while i < len(encoded) and encoded[i].isdigit():
             num_str += encoded[i]
@@ -457,7 +709,6 @@ def rle_decode(encoded: str) -> str:
         if not num_str or i >= len(encoded):
             raise ValueError("Invalid RLE data: missing count or character")
         count = int(num_str)
-        # read (possibly escaped) character
         if encoded[i] == "\\":
             if i + 1 >= len(encoded):
                 raise ValueError("Trailing escape sequence")
@@ -499,12 +750,12 @@ def compress():
         msg = "The compressed output is larger than the original. RLE is most effective with long runs of repeated characters (e.g. AAAAAABBBB)."
 
     return jsonify({
-        "compressed":      compressed,
-        "original_bytes":  orig_bytes,
+        "compressed":       compressed,
+        "original_bytes":   orig_bytes,
         "compressed_bytes": comp_bytes,
-        "ratio":           ratio,
-        "saving_pct":      saving_str,
-        "message":         msg,
+        "ratio":            ratio,
+        "saving_pct":       saving_str,
+        "message":          msg,
     })
 
 

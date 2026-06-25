@@ -55,34 +55,6 @@ Then open your browser and go to:
 http://127.0.0.1:5000
 ```
 
-## API Endpoints
-
-| Method | Endpoint      | Description                          |
-|--------|---------------|--------------------------------------|
-| GET    | `/`           | Serves the web UI                    |
-| POST   | `/compress`   | Compresses text, returns JSON stats  |
-| POST   | `/decompress` | Decodes RLE-encoded text             |
-| POST   | `/download`   | Returns compressed text as a file    |
-
-### Example
-
-```bash
-curl -X POST http://127.0.0.1:5000/compress \
-  -H "Content-Type: application/json" \
-  -d '{"text": "AAABBBCCC"}'
-```
-
-```json
-{
-  "compressed": "3A3B3C",
-  "original_bytes": 9,
-  "compressed_bytes": 6,
-  "ratio": 0.67,
-  "saving_pct": "-33.0%",
-  "message": "RLE reduced the file by 33.0%."
-}
-```
-
 ## When RLE Helps vs. Hurts
 
 | Input type                        | Result              |
